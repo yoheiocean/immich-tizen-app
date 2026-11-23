@@ -15,7 +15,8 @@ remote. It is built for **older** Samsung TVs whose built-in browser is too old 
 - **Photo grids** for the whole timeline, any album, any person or any memory. They stay fast with tens of thousands of
   photos, because only the visible thumbnails exist on screen and each month is fetched only when you scroll to it.
 - **Full-screen viewer:** previous/next with the arrows, a details panel (date, place, camera, exposure, people,
-  file name), and video playback with play/pause and 10-second skips.
+  file name), and video playback with play/pause and 10-second skips. Videos play in **Samsung's native player**,
+  so portrait phone videos display correctly.
 - **Slideshow and Shuffle buttons** on every grid. Shuffle randomises the *whole* album, person or timeline, not
   just the photos already loaded.
 - **Slideshow polish:**
@@ -133,11 +134,13 @@ Keep `~/.tizen-data`. The TV only accepts updates signed with the same certifica
 | `Invaild password` when packaging | The signing profile lost its passwords: run `bash tools/tv.sh cert` again |
 | App opens but shows "Could not reach Immich" | `IMMICH_URL` isn't reachable *from the TV*. Use the LAN IP, not `localhost`. Check the server's port |
 | Some videos say they can't be played | The TV can't decode that file and Immich has no transcoded copy. Set Immich's video transcoding policy so it creates H.264 versions |
+| Videos play but look shifted or cropped | That's the HTML5 player, which only runs if AVPlay failed to start. Check that `webapis.js` loads (it's provided by the TV at `$WEBAPIS/webapis/webapis.js`) and that `config.xml` keeps the `avplay` privilege |
 | Install works but the icon didn't change | The TV caches icons; restart the TV |
 
 ## How it works (for the curious)
 
-- **No build step.** `app/` is the whole app: `index.html`, `css/app.css`, `js/api.js`, `js/app.js`. At package time,
+- **No build step.** `app/` is the whole app: `index.html`, `css/app.css`, `js/api.js`, `js/video.js`, `js/app.js`.
+  At package time,
   `tools/tv.sh` writes `js/config.js` (server URL + API key) into a temporary copy only, so the key never touches the
   repo.
 - **The old engine.** The code avoids anything newer than about 2018, including optional chaining, `??`,
@@ -153,6 +156,12 @@ Keep `~/.tizen-data`. The TV only accepts updates signed with the same certifica
 - **Blurred background.** A CSS `filter: blur()` on a hidden layer is only drawn when the layer becomes visible, which
   shows up as a flash of black bars. Instead, each photo's thumbnail is blurred into a 120×68 `<canvas>` *before* the
   slide changes, and the canvas is scaled up on the GPU.
+- **Video.** Phone videos are often saved as landscape footage plus a "rotate 90°" tag. Immich serves the original
+  file whenever it hasn't made a converted copy, which is common if your server accepts HEVC. The TV's HTML5 `<video>`
+  mis-places those: shifted, cropped, off-center. So videos play through Samsung's native **AVPlay**
+  (`webapis.avplay`), which handles the rotation. AVPlay draws on the TV's video layer *behind* the page, so the app
+  makes its own background transparent while a video plays (`html.avplay`). If AVPlay fails to start, the app falls
+  back to `<video>` (`js/video.js`).
 - **Packaging.** It uses Samsung's official CLI installer (`download.tizen.org`), not a third-party image.
   `tizen build-web` is skipped because it crashes in CLI 6.1 and is only an optional minify step.
 

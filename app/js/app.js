@@ -302,7 +302,9 @@
         Grid.btn = -1; show(Grid); Grid.focus();
       } else { show(Home); Home.focus(); }
     },
-    stopVideo: function () { var v = $('v-video'); v.pause(); v.removeAttribute('src'); v.load(); v.classList.add('hidden'); },
+    stopVideo: function () {
+      Players.av.stop(); Players.html.stop(); this.player = null;
+    },
     // The spinner only appears if something takes longer than SPIN_DELAY (no flash for cached photos).
     spin: function (on) {
       clearTimeout(this.spinTimer);
@@ -364,17 +366,26 @@
       im.style.transition = 'opacity 0.6s ease';
       im.style.transform = t && t !== 'none' ? t : 'none';
     },
+    // Videos use Samsung's native player when available (see js/video.js), else the HTML5 <video>.
     showVideo: function (a) {
-      var self = this, v = $('v-video');
+      var self = this, seq = this.seq, url = Api.video(a.id), poster = Api.preview(a.id);
       ['a', 'b'].forEach(function (x) { $('v-img-' + x).classList.remove('on'); $('v-bg-' + x).classList.remove('on'); });
       clearTimeout(this.timer);
-      v.classList.remove('hidden');
-      v.poster = Api.preview(a.id);
-      v.src = Api.video(a.id);
-      v.onplaying = function () { self.spin(false); };
-      v.onended = function () { if (self.slide) self.next(); };
-      v.onerror = function () { self.spin(false); toast('This video can’t be played on the TV'); if (self.slide) self.schedule(); };
-      var p = v.play(); if (p && p.catch) p.catch(function () {});
+      this.stopVideo();
+      var h = {
+        onPlaying: function () { if (seq === self.seq) self.spin(false); },
+        onEnded: function () { if (seq === self.seq && self.slide) self.next(); },
+        onError: function (msg) {
+          if (seq !== self.seq) return;
+          if (self.player === Players.av) {          // AVPlay failed: fall back to HTML5 once
+            Players.av.stop(); self.player = Players.html;
+            Players.html.start(url, h, poster); return;
+          }
+          self.spin(false); toast('This video can\u2019t be played on the TV'); if (self.slide) self.schedule();
+        }
+      };
+      this.player = Players.av.available() ? Players.av : Players.html;
+      try { this.player.start(url, h, poster); } catch (e) { h.onError('start: ' + e.message); }
     },
     bar: function (a) {
       var m = this.src.monthOf(this.i);
@@ -434,22 +445,22 @@
       else if (this.slide) this.showAt(0);
     },
     key: function (k) {
-      var v = $('v-video'), isVideo = this.asset && !this.asset.isImage;
+      var p = this.player, isVideo = !!(this.asset && !this.asset.isImage && p);
       if (k === KEY.BACK || k === KEY.ESC) { if (this.info) { this.toggleInfo(); return; } this.close(); return; }
       if (k === KEY.RIGHT) { this.next(); if (this.slide) this.schedule(); }
       else if (k === KEY.LEFT) { if (this.i > 0) this.showAt(this.i - 1); if (this.slide) this.schedule(); }
       else if (k === KEY.UP || k === KEY.DOWN) this.toggleInfo();
       else if (k === KEY.ENTER) {
-        if (isVideo) { if (v.paused) v.play(); else v.pause(); }
+        if (isVideo) p.toggle();
         else this.toggleInfo();
       }
       else if (k === KEY.PLAYPAUSE) {
-        if (isVideo && !this.slide) { if (v.paused) v.play(); else v.pause(); } else this.setSlide(!this.slide);
+        if (isVideo && !this.slide) p.toggle(); else this.setSlide(!this.slide);
       }
-      else if (k === KEY.PLAY) { if (isVideo && v.paused) v.play(); else this.setSlide(true); }
-      else if (k === KEY.PAUSE || k === KEY.STOP) { if (isVideo) v.pause(); this.setSlide(false); }
-      else if (k === KEY.FF && isVideo) v.currentTime = Math.min(v.duration || 0, v.currentTime + 10);
-      else if (k === KEY.RW && isVideo) v.currentTime = Math.max(0, v.currentTime - 10);
+      else if (k === KEY.PLAY) { if (isVideo && p.paused()) p.play(); else this.setSlide(true); }
+      else if (k === KEY.PAUSE || k === KEY.STOP) { if (isVideo) p.pause(); this.setSlide(false); }
+      else if (k === KEY.FF && isVideo) p.skip(10);
+      else if (k === KEY.RW && isVideo) p.skip(-10);
     }
   };
 
@@ -473,7 +484,7 @@
     e.preventDefault();
   });
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden && current === Viewer) { Viewer.setSlide(false); $('v-video').pause(); }
+    if (document.hidden && current === Viewer) { Viewer.setSlide(false); if (Viewer.player) Viewer.player.pause(); }
   });
 
   registerKeys(); clock(); setInterval(clock, 15000);
