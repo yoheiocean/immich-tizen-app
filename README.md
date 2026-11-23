@@ -92,8 +92,13 @@ nano .env        # set TV_IP and IMMICH_URL (and optionally ICON_FROM_SERVER=1)
 
 1. Find your install machine's LAN IP (`hostname -I`).
 2. On the TV, open **Apps** from the Home bar.
-3. **Highlight any app tile** so it is selected. This matters: with nothing selected, the code below does nothing.
-4. Type **1 2 3 4 5** on the remote. On remotes without number keys, use the **123** button's on-screen keypad.
+3. Type **1 2 3 4 5** on the remote. On remotes without number keys, use the **123** button's on-screen keypad.
+4. If nothing happens (it can be stubborn), try these:
+   - Highlight any app tile first, then type `12345`.
+   - Type `00000`, then `12345`.
+   - Simply repeat it a few times.
+
+   On the test TV, a mix of all three opened it eventually, and it's unclear which one mattered.
 5. In the Developer Mode window, switch it **On** and set **Host PC IP** to your install machine's IP. Choose OK.
 6. **Hold the power button** until the TV restarts. A normal off/on is not enough.
 
@@ -123,7 +128,7 @@ Keep `~/.tizen-data`. The TV only accepts updates signed with the same certifica
 
 | Symptom | Cause / fix |
 |---|---|
-| `12345` on the Apps screen does nothing | Highlight an app tile first, then type the code |
+| `12345` on the Apps screen does nothing | Try highlighting an app tile first, entering `00000` and then `12345`, or simply repeating it. If you find out what reliably works on your model, please open an issue |
 | `failed to connect to <TV>:26101` | Developer Mode is off, or **Host PC IP** isn't this machine's IP. Check it in the Developer Mode window, then hold Power to restart the TV |
 | `Invaild password` when packaging | The signing profile lost its passwords: run `bash tools/tv.sh cert` again |
 | App opens but shows "Could not reach Immich" | `IMMICH_URL` isn't reachable *from the TV*. Use the LAN IP, not `localhost`. Check the server's port |
