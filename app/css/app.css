@@ -1,0 +1,81 @@
+/* Immich TV. Target: Samsung Tizen 5.0 (Chromium ~63). Avoid flex `gap`, `inset`, aspect-ratio, :is(). */
+html, body { margin: 0; padding: 0; width: 1920px; height: 1080px; overflow: hidden;
+  background: #0d0f12; color: #e8eaed; font-family: "SamsungOne", "Samsung Sans", Roboto, sans-serif; }
+.hidden { display: none !important; }
+.screen { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; }
+
+/* ---------- Home ---------- */
+#home-header { position: absolute; left: 80px; right: 80px; top: 36px; height: 60px; z-index: 2; }
+.logo { font-size: 44px; font-weight: bold; color: #8ab4f8; letter-spacing: 1px; }
+#clock { position: absolute; right: 0; top: 6px; font-size: 36px; color: #9aa0a6; }
+#rows-viewport { position: absolute; left: 0; top: 120px; width: 1920px; height: 960px; overflow: hidden; }
+#rows { position: absolute; left: 0; top: 0; width: 1920px; transition: transform 0.25s ease-out; }
+.row { position: relative; height: 0; margin-bottom: 36px; }
+.row-title { position: absolute; left: 80px; top: 0; font-size: 34px; color: #c4c7c5; }
+.row-track { position: absolute; left: 80px; top: 56px; white-space: nowrap; transition: transform 0.25s ease-out; }
+.card { display: inline-block; vertical-align: top; position: relative; margin-right: 28px; }
+.card .pic { position: relative; background: #24272c center / cover no-repeat; border-radius: 12px;
+  border: 5px solid transparent; overflow: hidden; }
+.card .label { font-size: 26px; color: #c4c7c5; margin-top: 10px; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+.card .sublabel { font-size: 22px; color: #80868b; margin-top: 2px; }
+.card.focus .pic { border-color: #8ab4f8; transform: scale(1.06); }
+.card.focus .label { color: #fff; }
+.card .pic { transition: transform 0.15s ease-out; }
+.card.memory .pic { width: 420px; height: 280px; }
+.card.memory .over { position: absolute; left: 0; right: 0; bottom: 0; padding: 60px 20px 16px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.75)); font-size: 30px; font-weight: bold; }
+.card.thumb .pic { width: 240px; height: 240px; }
+.card.album .pic { width: 300px; height: 300px; }
+.card.album .label { width: 300px; }
+.card.person .pic { width: 200px; height: 200px; border-radius: 50%; }
+.card.person .label { width: 210px; text-align: center; }
+.card.all .pic { width: 240px; height: 240px; background: #1f3a5f; }
+.card.all .big { position: absolute; left: 0; right: 0; top: 70px; text-align: center; font-size: 34px;
+  font-weight: bold; color: #d2e3fc; line-height: 44px; }
+.vid-badge { position: absolute; right: 10px; bottom: 10px; background: rgba(0,0,0,0.65); color: #fff;
+  font-size: 22px; padding: 2px 10px; border-radius: 6px; }
+.empty-note { position: absolute; left: 80px; top: 70px; font-size: 26px; color: #80868b; }
+
+/* ---------- Grid ---------- */
+#grid-header { position: absolute; left: 80px; right: 80px; top: 36px; height: 80px; }
+#grid-title { font-size: 44px; font-weight: bold; }
+#grid-sub { position: absolute; right: 0; top: 10px; font-size: 34px; color: #9aa0a6; }
+#grid-btns { margin-top: 18px; }
+.gbtn { display: inline-block; font-size: 30px; padding: 12px 30px; margin-right: 24px; border-radius: 40px;
+  background: #24272c; color: #c4c7c5; border: 4px solid transparent; }
+.gbtn.focus { background: #8ab4f8; color: #0d0f12; font-weight: bold; }
+#grid-viewport { position: absolute; left: 60px; top: 210px; width: 1800px; height: 870px; overflow: hidden; }
+#grid-canvas { position: absolute; left: 0; top: 0; width: 1800px; transition: transform 0.2s ease-out; }
+.tile { position: absolute; width: 237px; height: 237px; background: #24272c center / cover no-repeat;
+  border-radius: 8px; border: 5px solid transparent; box-sizing: border-box; }
+.tile.focus { border-color: #8ab4f8; z-index: 2; transform: scale(1.08); }
+.tile .month { position: absolute; left: 0; top: 0; background: rgba(0,0,0,0.7); color: #fff;
+  font-size: 20px; padding: 2px 10px; border-bottom-right-radius: 8px; }
+
+/* ---------- Viewer ---------- */
+#viewer { background: #000; }
+/* Blurred fill behind photos that are not 16:9: the thumbnail is blurred + darkened ONCE into a 120x68 canvas
+   (js drawBg) before the swap, then scaled 16.5x on the GPU. A CSS filter here was only rendered when the layer
+   became visible, so it appeared after the photo. will-change keeps both layers ready. */
+.v-bg { position: absolute; left: 900px; top: 506px; width: 120px; height: 68px; background: #000;
+  transform: scale(16.5); opacity: 0; transition: opacity 0.6s ease; will-change: opacity; }
+.v-bg.on { opacity: 1; }
+.v-img { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: contain;
+  opacity: 0; transition: opacity 0.6s ease; }
+.v-img.on { opacity: 1; }
+#v-video { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: #000; }
+#v-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 110px; padding: 0 70px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8)); font-size: 30px; line-height: 130px; }
+#v-bar-right { position: absolute; right: 70px; color: #bdc1c6; }
+#v-info { position: absolute; right: 50px; top: 50px; width: 560px; padding: 30px 36px;
+  background: rgba(20,22,26,0.88); border-radius: 14px; font-size: 26px; line-height: 40px; }
+#v-info .k { color: #9aa0a6; }
+#v-badge { position: absolute; left: 50px; top: 46px; padding: 8px 20px; background: rgba(0,0,0,0.6);
+  border-radius: 10px; font-size: 28px; }
+#v-spinner { position: absolute; left: 930px; top: 510px; width: 60px; height: 60px; border-radius: 50%;
+  border: 6px solid rgba(255,255,255,0.2); border-top-color: #8ab4f8; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#toast { position: absolute; left: 50%; bottom: 60px; width: 1000px; margin-left: -500px; text-align: center;
+  background: rgba(40,42,48,0.95); padding: 18px; border-radius: 10px; font-size: 28px; z-index: 50; }

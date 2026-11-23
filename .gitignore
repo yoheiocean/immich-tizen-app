@@ -1,0 +1,6 @@
+.env
+dist/
+app/js/config.js
+*.wgt
+.buildResult/
+.DS_Store
